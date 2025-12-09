@@ -18,12 +18,12 @@
 	    <http:success-status-code-validator values="200" />
 	  </http:response-validator>
 	</http:request>
-	<http:request method="GET" url="https://tngaa-passenger-data-sapi-dev-9yj2rh.rajrd4-2.usa-e1.cloudhub.io/alive" followRedirects="true" doc:name="Passenger Data SAPI" >
+		<http:request method="GET" url="https://tngaa-passenger-data-sapi-dev-9yj2rh.rajrd4-2.usa-e1.cloudhub.io/alive" followRedirects="true" doc:name="Passenger Data SAPI" >
 	  <http:response-validator >
 	    <http:success-status-code-validator values="200" />
 	  </http:response-validator>
 	</http:request>
-	<http:request method="GET" url="https://tngaa-paypal-sapi-dev-9yj2rh.rajrd4-2.usa-e1.cloudhub.io/alive" followRedirects="true" doc:name="Paypal SAPI" >
+		<http:request method="GET" url="https://tngaa-paypal-sapi-dev-9yj2rh.rajrd4-2.usa-e1.cloudhub.io/alive" followRedirects="true" doc:name="Paypal SAPI" >
 	  <http:response-validator >
 	    <http:success-status-code-validator values="200" />
 	  </http:response-validator>
