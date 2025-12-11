@@ -10,11 +10,13 @@
   a copy of which has been included with this distribution in the LICENSE.txt file.
   #L%
   -->
-<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:anypoint-mq="http://www.mulesoft.org/schema/mule/anypoint-mq" xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:core="http://www.mulesoft.org/schema/mule/core" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="  http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd  http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd  http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd   http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd  http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd  http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd    http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+<mule xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:xml-module="http://www.mulesoft.org/schema/mule/xml-module" xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:anypoint-mq="http://www.mulesoft.org/schema/mule/anypoint-mq" xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:core="http://www.mulesoft.org/schema/mule/core" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="  http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd  http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd  http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd   http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd  http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd  http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd    http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
 http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd
 http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
 http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/mule/anypoint-mq/current/mule-anypoint-mq.xsd
-http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/xml-module http://www.mulesoft.org/schema/mule/xml-module/current/mule-xml-module.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd">
   <flow name="check-in-by-pnr">
     <logger level="INFO" message="#['Checking-in by PNR: ' ++ (vars.PNR default '')]" doc:name="START"/>
     <!-- TODO: create checkIn SOAP payload  -->
@@ -139,11 +141,11 @@ http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mu
 	  </http:listener>
 	  <set-variable value="#[output text/plain --- payload.^raw]" doc:name="originalPayload = payload.^raw" doc:id="0ced70e3-d184-4074-9f34-12e77225b981" variableName="originalPayload"/>
 		<validation:is-true doc:name="content-type" doc:id="a081c94a-7cdf-4dd3-b14e-a65942100425" expression="#[var ct = attributes.headers.'content-type' --- ((not isBlank(ct)) and (lower(ct) contains '/xml'))]"/>
-		<validation:is-not-blank-string doc:name="payload.^raw" doc:id="64cba2bf-6711-4439-9c8a-b33c03219f39" value="#[payload.^raw]" message="Payload is missing"/>
+		<xml-module:validate-schema doc:name="schemas/CancellationNotification.xsd" doc:id="383a54ca-df36-4511-96da-00acde4861ae" schemas="schemas/CancellationNotification.xsd"/>
 		<logger level="INFO" message="Received Cancellation Notification" doc:name="Received Cancellation Notification" />
 		<vm:publish doc:name="flight-cancel-notifs-q" doc:id="bc9667ac-c920-47e9-8207-42fa3c49880f" config-ref="vmConfig" queueName="flight-cancel-notifs-q"/>
 	  <error-handler>
-		  <on-error-continue when="#[['VALIDATION'] contains error.errorType.namespace]">
+		  <on-error-continue when="#[['VALIDATION', 'XML-MODULE'] contains error.errorType.namespace]" enableNotifications="true" logException="true">
 		    <set-variable variableName="httpStatus" value="400" doc:name="httpStatus = 400"/>
 		    <set-variable variableName="response" value="#[output text/plain --- vars.originalPayload]" doc:name="response = vars.originalPayload"/>
 		  </on-error-continue>
@@ -167,7 +169,8 @@ http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mu
 		}]]></ee:set-payload>
 		        </ee:message>
 		    </ee:transform>
-		    <set-variable variableName="msgValid" value="#[true]" doc:name="msgValid = true"/>
+			<json:validate-schema doc:name="schemas/FlightCancelledEvent.schema.json" doc:id="02abe0d8-6826-4b0c-be6b-89e941195fab" schema="schemas/FlightCancelledEvent.schema.json"/>
+			<set-variable variableName="msgValid" value="#[true]" doc:name="msgValid = true"/>
 		    <error-handler>
 		      <on-error-continue enableNotifications="false" logException="false">
 		      <flow-ref name="send-to-vm-dlq" doc:name="send-to-vm-dlq"/>
