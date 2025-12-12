@@ -5,7 +5,7 @@
 - STUDENT_FILE=/Users/yehan.jeong/Desktop/CDEV-DEX670-EN-25oct2024-Student-Files
 
 ## Anypoint Platform Information
-- Mule Account:
+- Mule Account: yehan202512
 
 ### Business Group
 - Business Group ID: c1f2340a-aef7-421e-aab8-07e0d3afb5da
@@ -45,3 +45,5 @@
 - mvn install:install-file -Dfile=parent-pom/pom.xml -DpomFile=parent-pom/pom.xml
 - mvn deploy -f pom.xml -Pdeploy-to-exchange-v3
 - mvn deploy -f pom.xml
+- curl -ik -H "Content-Type:text/xml" -d "<CancellationNotification><PNR>PNR123</PNR><PassengerLastName>Mule</PassengerLastName></CancellationNotification>" https://localhost:8081/api/cancelFlight
+- mvn -B -f bom/pom.xml archetype:generate -DarchetypeGroupId=org.mule.extensions -DarchetypeArtifactId=mule-extensions-xml-archetype -DarchetypeVersion=1.2.0 -DgroupId=c1f2340a-aef7-421e-aab8-07e0d3afb5da -DartifactId=resilience-mule-extension -DmuleConnectorName=resilience-mule-extension -DextensionName=resilience -Dpackage=. -DoutputDirectory=../
