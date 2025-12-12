@@ -10,7 +10,9 @@
   a copy of which has been included with this distribution in the LICENSE.txt file.
   #L%
   -->
-<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:tracing="http://www.mulesoft.org/schema/mule/tracing" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="  http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd  http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd  http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd  http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd  http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd   http://www.mulesoft.org/schema/mule/tracing http://www.mulesoft.org/schema/mule/tracing/current/mule-tracing.xsd">
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:tracing="http://www.mulesoft.org/schema/mule/tracing" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd   http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd  http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd  http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd  http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd  http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd   http://www.mulesoft.org/schema/mule/tracing http://www.mulesoft.org/schema/mule/tracing/current/mule-tracing.xsd">
   <flow name="check-in-by-pnr">
     <tracing:set-logging-variable variableName="PNR" value="#[vars.PNR default '']" doc:name="Set PNR tracing var"/>
     <logger level="INFO" message="#['Checking-in by PNR: ' ++ (vars.PNR default '')]" doc:name="START"/>
@@ -82,15 +84,34 @@ var paypalReturn = payload['2'].payload
 	  </choice>
 	</flow>
 	<flow name="get-ticket-by-pnr">
-	  <http:request config-ref="flightsManagementSapiConfig" method="GET" path="/tickets/{PNR}" target="ticket"
-	        doc:name="FMS Get Ticket">
-	    <http:uri-params><![CDATA[#[output application/java
+	  <until-successful maxRetries="#[3]" millisBetweenRetries="#[1000]">
+	    <try>
+	      <http:request config-ref="flightsManagementSapiConfig" method="GET" path="/tickets/{PNR}" target="ticket" doc:name="FMS Get Ticket">
+	        <http:uri-params><![CDATA[#[output application/java
 	---
 	{
 	    "PNR" : vars.PNR
 	}]]]></http:uri-params>
-	  </http:request>
+	      </http:request>
+	      <error-handler>
+	        <on-error-continue enableNotifications="true" logException="true" type="HTTP:BAD_GATEWAY, HTTP:BAD_REQUEST, HTTP:NOT_FOUND">
+	          <set-variable variableName="failed" value="#[true]" doc:name="failed = true" />
+	        </on-error-continue>
+	      </error-handler>
+	    </try>
+	  </until-successful>
+	  <choice doc:name="Choice" >
+	    <when expression="#[vars.failed]">
+	      <raise-error doc:name="APP:GET_TICKET_FAILED" type="APP:GET_TICKET_FAILED" description="Failed to get ticket information"/>
+	    </when>
+	  </choice>
+		<error-handler>
+	    <on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" type="MULE:RETRY_EXHAUSTED">
+	      <logger level="INFO" doc:name="MULE:RETRY_EXHAUSTED is occurred" message="MULE:RETRY_EXHAUSTED is occurred"/>
+	    </on-error-continue>
+	  </error-handler>
 	</flow>
+		
 	<flow name="get-passenger-data-by-passport">
 	  <http:request target="passenger" config-ref="passengerDataSapiConfig" method="GET" path="/passengers" doc:name="Passenger API Get Passenger">
 	    <http:query-params><![CDATA[#[output application/java

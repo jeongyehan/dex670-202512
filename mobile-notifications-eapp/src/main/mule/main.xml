@@ -10,17 +10,20 @@
   a copy of which has been included with this distribution in the LICENSE.txt file.
   #L%
   -->
-<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:anypoint-mq="http://www.mulesoft.org/schema/mule/anypoint-mq" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="  http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd  http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd    http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/mule/anypoint-mq/current/mule-anypoint-mq.xsd  http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd  http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd  http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
-http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+<mule xmlns:tracing="http://www.mulesoft.org/schema/mule/tracing" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:anypoint-mq="http://www.mulesoft.org/schema/mule/anypoint-mq" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="  http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd  http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd    http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/mule/anypoint-mq/current/mule-anypoint-mq.xsd  http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd  http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd  http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/tracing http://www.mulesoft.org/schema/mule/tracing/current/mule-tracing.xsd">
   <flow name="retrieve-cancellation-event">
 	  <anypoint-mq:subscriber config-ref="amqConfig" destination="cancelled-flights-mobile-queue-dev" acknowledgementMode="MANUAL">
 	    <reconnect-forever frequency="1000" />
 	  </anypoint-mq:subscriber>
-	  <set-variable value="#[attributes.ackToken]" doc:name="attributes.ackToken" doc:id="a48a53ec-97e0-4e68-97b7-449d0abec763" variableName="mqAckToken"/>
 		<logger level="INFO" message="Received" doc:name="Received"/>
-		<ee:transform doc:name="Convert to Our Event Format" doc:id="9c4cf54a-3a0b-4d81-891c-1062954a4386" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+		<tracing:with-correlation-id doc:name="With CorrelationID" doc:id="3adb6e56-b918-43ef-ab15-087831f0ef22" correlationId='#[attributes.properties.correlationId as String default "" ++ "-local"]'>
+			<logger level="INFO" doc:name="Received" doc:id="6deeab8d-1231-4d56-9e94-080a19ab181e" message="Received" />
+			<set-variable value="#[attributes.ackToken]" doc:name="attributes.ackToken" doc:id="a48a53ec-97e0-4e68-97b7-449d0abec763" variableName="mqAckToken" />
+			<ee:transform doc:name="Convert to Our Event Format" doc:id="9c4cf54a-3a0b-4d81-891c-1062954a4386">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
@@ -30,9 +33,9 @@ output application/json
 ]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<vm:publish queueName="mobile-app-native-notifs-q" doc:name="mobile-app-native-notifs-q" doc:id="e9a7f76f-2d2f-452b-bdec-139ddc2bc585" config-ref="mobileAppNetworkVMConfig"/>
-		<anypoint-mq:ack doc:name="vars.mqAckToken" doc:id="da0a88bc-f415-4fe6-b6f5-b65dff21937c" config-ref="amqConfig" ackToken="#[vars.mqAckToken]"/>
-		<logger level="INFO" doc:name="Logger" doc:id="1f0fb596-d2fd-40eb-bb6f-884ff3ba5cac" message='#[payload]'/>
+			<vm:publish queueName="mobile-app-native-notifs-q" doc:name="mobile-app-native-notifs-q" doc:id="e9a7f76f-2d2f-452b-bdec-139ddc2bc585" config-ref="mobileAppNetworkVMConfig" />
+			<anypoint-mq:ack doc:name="vars.mqAckToken" doc:id="da0a88bc-f415-4fe6-b6f5-b65dff21937c" config-ref="amqConfig" ackToken="#[vars.mqAckToken]" />
+		</tracing:with-correlation-id>
 		<logger level="INFO" doc:name="Logger" doc:id="c440fa7e-1be2-46c9-bc25-9e6ef44c41fa" message="#[vars.mqAckToken]"/>
 		<error-handler >
 			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="9620ef66-8c05-4fac-96b0-a114d6145eca" >

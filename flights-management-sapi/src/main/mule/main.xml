@@ -171,7 +171,7 @@ http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/jso
 		    </ee:transform>
 			<json:validate-schema doc:name="schemas/FlightCancelledEvent.schema.json" doc:id="02abe0d8-6826-4b0c-be6b-89e941195fab" schema="schemas/FlightCancelledEvent.schema.json"/>
 			<set-variable variableName="msgValid" value="#[true]" doc:name="msgValid = true"/>
-		    <error-handler>
+			<error-handler>
 		      <on-error-continue enableNotifications="false" logException="false">
 		      <flow-ref name="send-to-vm-dlq" doc:name="send-to-vm-dlq"/>
 		      <set-variable variableName="msgValid" value="#[false]" doc:name="msgValid = false"/>
@@ -180,7 +180,11 @@ http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/jso
 		</try>
 		<choice>
 		  <when expression="#[vars.msgValid]">
-		    <anypoint-mq:publish destination="cancelled-flights-exchg-dev" messageId="#[correlationId]" config-ref="amqConfig" doc:name="cancelled-flights-exchg-dev" />
+		    <anypoint-mq:publish destination="cancelled-flights-exchg-dev" config-ref="amqConfig" doc:name="cancelled-flights-exchg-dev" >
+					<anypoint-mq:properties ><![CDATA[#[{
+    "correlationId": correlationId
+}]]]></anypoint-mq:properties>
+				</anypoint-mq:publish>
 		  </when>
 		</choice>	
 		<logger level="INFO" doc:name="Logger" doc:id="a691dd12-8900-4dc3-b8e2-c993ab8fd965" message="Process Completed!!"/>
